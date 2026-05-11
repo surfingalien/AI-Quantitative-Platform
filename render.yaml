@@ -1,0 +1,58 @@
+services:
+  # 1. Managed Redis Queue (Private & Secure)
+  - type: redis
+    name: trading-redis
+    ipAllowList: [] # Only internal Render services can connect
+    plan: free
+
+  # 2. FastAPI Backend & WebSockets
+  - type: web
+    name: trading-backend
+    env: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: trading-redis
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false # You will enter this securely in the Render Dashboard
+      - key: GEMINI_API_KEY
+        sync: false # Enter this in Render Dashboard
+      - key: WEBHOOK_SECRET
+        generateValue: true # Render will automatically generate a strong random secret
+
+  # 3. AI Worker (Processes TradingView Signals via Claude)
+  - type: worker
+    name: trading-worker
+    env: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "rq worker default"
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: trading-redis
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # 4. Next.js Trading Dashboard
+  - type: web
+    name: trading-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          type: web
+          name: trading-backend
+          property: host
