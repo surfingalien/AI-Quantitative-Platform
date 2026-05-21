@@ -42,43 +42,47 @@ interface Signal {
   timestamp?: string;
 }
 
-const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: StatCardProps) => (
-  <motion.div
-    variants={itemVariants}
-    className="glass-panel p-6 rounded-2xl card-hover"
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-slate-400 text-sm mb-2">{label}</p>
-        <p className="text-3xl font-bold text-white">{value}</p>
-        {change && (
-          <p className={`text-sm mt-2 ${change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {change > 0 ? '↑' : '↓'} {Math.abs(change)}%
-          </p>
-        )}
-      </div>
-      <div className={`p-3 rounded-full bg-${color}-500/20 border border-${color}-500/30`}>
-        <Icon className={`w-6 h-6 text-${color}-400`} />
-      </div>
-    </div>
-  </motion.div>
-);
-
-const SignalBadge = ({ type }: { type: 'BUY' | 'SELL' | 'HOLD' }) => {
-  const getColor = (action: 'BUY' | 'SELL' | 'HOLD') => {
-    switch (action) {
-      case 'BUY':
-        return { bg: 'emerald', text: 'emerald' };
-      case 'SELL':
-        return { bg: 'red', text: 'red' };
-      case 'HOLD':
-        return { bg: 'amber', text: 'amber' };
-    }
+const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: StatCardProps) => {
+  const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+    emerald: { bg: 'rgb(16 185 129 / 0.2)', border: 'rgb(16 185 129 / 0.3)', text: 'rgb(52 211 153)' },
+    blue: { bg: 'rgb(59 130 246 / 0.2)', border: 'rgb(59 130 246 / 0.3)', text: 'rgb(96 165 250)' },
+    purple: { bg: 'rgb(139 92 246 / 0.2)', border: 'rgb(139 92 246 / 0.3)', text: 'rgb(168 85 247)' },
   };
-  const color = getColor(type);
+  const colorStyle = colorMap[color] || colorMap.emerald;
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-bold bg-${color.bg}-500/20 text-${color.text}-400 border border-${color.bg}-500/30 whitespace-nowrap`}>
+    <motion.div
+      variants={itemVariants}
+      className="glass-panel p-6 rounded-2xl card-hover"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-slate-400 text-sm mb-2">{label}</p>
+          <p className="text-3xl font-bold text-white">{value}</p>
+          {change && (
+            <p className={`text-sm mt-2 ${change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {change > 0 ? '↑' : '↓'} {Math.abs(change)}%
+            </p>
+          )}
+        </div>
+        <div className="p-3 rounded-full border" style={{ backgroundColor: colorStyle.bg, borderColor: colorStyle.border }}>
+          <Icon className="w-6 h-6" style={{ color: colorStyle.text }} />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const SignalBadge = ({ type }: { type: 'BUY' | 'SELL' | 'HOLD' }) => {
+  const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+    BUY: { bg: 'rgb(16 185 129 / 0.2)', border: 'rgb(16 185 129 / 0.3)', text: 'rgb(52 211 153)' },
+    SELL: { bg: 'rgb(239 68 68 / 0.2)', border: 'rgb(239 68 68 / 0.3)', text: 'rgb(248 113 113)' },
+    HOLD: { bg: 'rgb(217 119 6 / 0.2)', border: 'rgb(217 119 6 / 0.3)', text: 'rgb(251 146 60)' },
+  };
+  const colorStyle = colorMap[type];
+
+  return (
+    <span className="px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap" style={{ backgroundColor: colorStyle.bg, borderColor: colorStyle.border, color: colorStyle.text }}>
       {type}
     </span>
   );
