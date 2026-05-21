@@ -8,7 +8,7 @@ import sys
 import time
 import logging
 from redis import Redis
-from rq import Worker, Queue, Connection
+from rq import Worker, Queue
 
 # Configure logging
 logging.basicConfig(
@@ -144,15 +144,14 @@ def start_worker(redis_url: str) -> None:
         # Connect to Redis
         redis_conn = Redis.from_url(redis_url)
 
-        # Start worker
-        with Connection(redis_conn):
-            queue = Queue('default', connection=redis_conn)
-            worker = Worker(['default'], connection=redis_conn)
-            logger.info(f"✓ Worker started, listening on queue 'default'")
-            logger.info(f"  Connected to Redis: {redis_url}")
-            logger.info("  Press Ctrl+C to stop")
-            logger.info("="*60)
-            worker.work()
+        # Start worker (RQ 2.0+ no longer uses Connection context manager)
+        queue = Queue('default', connection=redis_conn)
+        worker = Worker(['default'], connection=redis_conn)
+        logger.info(f"✓ Worker started, listening on queue 'default'")
+        logger.info(f"  Connected to Redis: {redis_url}")
+        logger.info("  Press Ctrl+C to stop")
+        logger.info("="*60)
+        worker.work()
     except KeyboardInterrupt:
         logger.info("\n✓ Worker stopped by user (Ctrl+C)")
         sys.exit(0)
