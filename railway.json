@@ -59,8 +59,8 @@
         "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
         "rootDirectory": "backend"
       },
-      "buildCommand": "pip install -r requirements.txt",
-      "startCommand": "python run_worker.py",
+      "buildCommand": "pip install -r requirements.txt && chmod +x start_worker.sh run_worker.py",
+      "startCommand": "bash start_worker.sh",
       "variables": {
         "REDIS_URL": {
           "reference": "${{ services.trading-redis.connectionString }}"

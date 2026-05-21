@@ -25,17 +25,24 @@ def get_redis_url() -> str:
     # Try to get from environment
     redis_url = os.getenv('REDIS_URL')
 
-    # If empty or not set, use default
-    if not redis_url:
+    # Debug: log the raw value
+    logger.info(f"DEBUG: Raw REDIS_URL from environment: {repr(redis_url)}")
+    logger.info(f"DEBUG: REDIS_URL length: {len(redis_url) if redis_url else 0}")
+
+    # If empty, None, or whitespace, use default
+    if not redis_url or not redis_url.strip():
+        logger.warning("REDIS_URL is empty or whitespace, using fallback")
         redis_url = 'redis://trading-redis:6379'
-        logger.info(f"REDIS_URL not in environment, using default: {redis_url}")
+        logger.info(f"Using fallback REDIS_URL: {redis_url}")
     else:
-        logger.info(f"REDIS_URL from environment: {redis_url}")
+        redis_url = redis_url.strip()
+        logger.info(f"Using REDIS_URL from environment: {redis_url}")
 
     # Validate format
     if not redis_url.startswith(('redis://', 'rediss://', 'unix://')):
         logger.error(f"❌ CRITICAL: Invalid REDIS_URL scheme: {redis_url}")
         logger.error("   Must start with redis://, rediss://, or unix://")
+        logger.error(f"   Got: {repr(redis_url)}")
         sys.exit(1)
 
     return redis_url
