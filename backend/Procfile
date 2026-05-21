@@ -1,1 +1,0 @@
-worker: exec python -u run_worker.py
