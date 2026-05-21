@@ -4,10 +4,37 @@ import time
 import sys
 from redis import Redis
 from rq import Worker, Queue, Connection
-from database import SessionLocal
-from models import Signal, Portfolio
-from ai_engine import analyze_with_claude, calculate_hybrid_score
-from indicators import fetch_and_calculate_technicals
+
+# Handle imports gracefully to catch initialization errors
+try:
+    from database import SessionLocal
+    print("✓ Database imported")
+except Exception as e:
+    print(f"✗ Failed to import database: {e}")
+    sys.exit(1)
+
+try:
+    from models import Signal, Portfolio
+    print("✓ Models imported")
+except Exception as e:
+    print(f"✗ Failed to import models: {e}")
+    sys.exit(1)
+
+try:
+    from ai_engine import analyze_with_claude, calculate_hybrid_score
+    print("✓ AI engine imported")
+except Exception as e:
+    print(f"✗ Failed to import ai_engine: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+
+try:
+    from indicators import fetch_and_calculate_technicals
+    print("✓ Indicators imported")
+except Exception as e:
+    print(f"✗ Failed to import indicators: {e}")
+    sys.exit(1)
 
 redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
 

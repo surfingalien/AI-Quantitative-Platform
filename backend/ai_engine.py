@@ -2,11 +2,30 @@ import os
 import json
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from agents import brain
 
 load_dotenv()
 
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", "dummy_key"))
+# Initialize agents carefully
+brain = None
+try:
+    from agents import brain
+    print("✓ Brain imported successfully")
+except Exception as e:
+    print(f"⚠ Failed to import brain: {e}")
+    import traceback
+    traceback.print_exc()
+
+# Initialize Anthropic client
+anthropic_client = None
+try:
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if api_key:
+        anthropic_client = Anthropic(api_key=api_key)
+        print("✓ Anthropic client initialized")
+    else:
+        print("⚠ ANTHROPIC_API_KEY not set")
+except Exception as e:
+    print(f"⚠ Failed to initialize Anthropic client: {e}")
 
 def calculate_hybrid_score(ai_confidence: int, technical_data: dict) -> float:
     '''
@@ -29,10 +48,24 @@ def calculate_hybrid_score(ai_confidence: int, technical_data: dict) -> float:
 def analyze_with_claude(alert_data: dict, portfolio_context: list, technical_data: dict) -> dict:
     symbol = alert_data.get("symbol", "UNKNOWN")
     timeframe = alert_data.get("timeframe", "15m")
-    
+
+    if anthropic_client is None:
+        return {
+            "decision": "IGNORE",
+            "confidence": 0,
+            "reasoning": ["Anthropic API key not configured"],
+            "risk_factors": []
+        }
+
     # Delegate to AI Agents
-    research_report = brain.generate_comprehensive_report(symbol, technical_data, timeframe)
-    
+    research_report = {"note": "Brain not available"}
+    if brain is not None:
+        try:
+            research_report = brain.generate_comprehensive_report(symbol, technical_data, timeframe)
+        except Exception as e:
+            print(f"Error in brain.generate_comprehensive_report: {e}")
+            research_report = {"error": str(e)}
+
     prompt = f'''
 ROLE:
 You are a professional quantitative analyst.
@@ -66,18 +99,18 @@ RULES:
   ]
 }}
 '''
-    
+
     try:
         response = anthropic_client.messages.create(
             model="claude-3-sonnet-20240229",
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
         content = response.content[0].text
         # In a real scenario, robust JSON parsing is needed here to extract just the JSON
         ai_response = json.loads(content)
-        
+
         return ai_response
     except Exception as e:
         print(f"Error calling Claude: {e}")

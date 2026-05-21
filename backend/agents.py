@@ -4,8 +4,22 @@ from anthropic import Anthropic
 import yfinance as yf
 import google.generativeai as genai
 
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", "dummy_key"))
-genai.configure(api_key=os.getenv("GEMINI_API_KEY", "dummy_key"))
+try:
+    anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
+    print("✓ Anthropic client initialized")
+except Exception as e:
+    print(f"⚠ Anthropic client initialization warning: {e}")
+    anthropic_client = None
+
+try:
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+    if gemini_api_key:
+        genai.configure(api_key=gemini_api_key)
+        print("✓ Gemini API configured")
+    else:
+        print("⚠ GEMINI_API_KEY not set, Gemini features will be disabled")
+except Exception as e:
+    print(f"⚠ Gemini API configuration warning: {e}")
 
 class AIBrain:
     """
@@ -70,12 +84,18 @@ class GeminiQualitativeAgent:
     Uses Gemini to perform qualitative research and narrative analysis.
     """
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = None
+        try:
+            if os.getenv("GEMINI_API_KEY"):
+                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                print("✓ Gemini model initialized")
+        except Exception as e:
+            print(f"⚠ Gemini model initialization failed: {e}")
 
     def analyze_narrative(self, symbol: str, fundamental_context: str, technical_context: str) -> str:
-        if os.getenv("GEMINI_API_KEY", "dummy_key") == "dummy_key":
+        if self.model is None or not os.getenv("GEMINI_API_KEY"):
             return "Gemini API key not configured. Qualitative research skipped."
-            
+
         prompt = f'''
 You are a seasoned qualitative market researcher.
 We are analyzing the stock ticker: {symbol}.
@@ -83,7 +103,7 @@ We are analyzing the stock ticker: {symbol}.
 Fundamental Context: {fundamental_context}
 Technical Context: {technical_context}
 
-Please provide a concise 2-sentence qualitative narrative analyzing the market regime, sentiment, and potential catalysts for this asset based on this context. 
+Please provide a concise 2-sentence qualitative narrative analyzing the market regime, sentiment, and potential catalysts for this asset based on this context.
 Focus strictly on narrative logic, don't just repeat the numbers.
         '''
         try:
