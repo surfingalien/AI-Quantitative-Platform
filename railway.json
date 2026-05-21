@@ -1,0 +1,99 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": [
+    {
+      "name": "trading-redis",
+      "source": {
+        "type": "image",
+        "image": "redis:7-alpine"
+      },
+      "healthcheck": {
+        "test": ["CMD", "redis-cli", "ping"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 5,
+        "startPeriod": 30
+      },
+      "variables": {
+        "REDIS_PORT": "6379"
+      }
+    },
+    {
+      "name": "trading-backend",
+      "source": {
+        "type": "repo",
+        "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
+        "rootDirectory": "backend"
+      },
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
+      "variables": {
+        "REDIS_URL": {
+          "reference": "${{ services.trading-redis.connectionString }}"
+        },
+        "ANTHROPIC_API_KEY": {
+          "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
+          "value": ""
+        },
+        "GEMINI_API_KEY": {
+          "description": "Your Google Gemini API key",
+          "value": ""
+        },
+        "WEBHOOK_SECRET": {
+          "description": "Webhook secret for TradingView (auto-generated, you can keep empty and Railway will generate)",
+          "value": ""
+        }
+      },
+      "healthcheck": {
+        "test": ["CMD", "curl", "-f", "http://localhost:$PORT/health"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    },
+    {
+      "name": "trading-worker",
+      "source": {
+        "type": "repo",
+        "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
+        "rootDirectory": "backend"
+      },
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "rq worker default -u $REDIS_URL",
+      "variables": {
+        "REDIS_URL": {
+          "reference": "${{ services.trading-redis.connectionString }}"
+        },
+        "ANTHROPIC_API_KEY": {
+          "reference": "${{ services.trading-backend.ANTHROPIC_API_KEY }}"
+        },
+        "GEMINI_API_KEY": {
+          "reference": "${{ services.trading-backend.GEMINI_API_KEY }}"
+        }
+      }
+    },
+    {
+      "name": "trading-frontend",
+      "source": {
+        "type": "repo",
+        "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
+        "rootDirectory": "frontend"
+      },
+      "buildCommand": "npm install && npm run build",
+      "startCommand": "npm start",
+      "variables": {
+        "NEXT_PUBLIC_BACKEND_URL": {
+          "reference": "${{ services.trading-backend.url }}"
+        }
+      },
+      "healthcheck": {
+        "test": ["CMD", "curl", "-f", "http://localhost:3000"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ]
+}
