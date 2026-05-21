@@ -359,7 +359,7 @@ export default function Home() {
                                 <td className="p-4 font-bold text-white">{signal.symbol}</td>
                                 <td className="p-4 text-slate-400 text-sm">{signal.timeframe || '1h'}</td>
                                 <td className="p-4">
-                                  <SignalBadge type={signal.ai_assessment || 'HOLD'} score={signal.confidence} />
+                                  <SignalBadge type={signal.ai_assessment || 'HOLD'} />
                                 </td>
                                 <td className="p-4">
                                   <div className="flex items-center gap-2">
