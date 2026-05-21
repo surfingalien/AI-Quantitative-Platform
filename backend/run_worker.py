@@ -7,6 +7,12 @@ import os
 import sys
 import time
 import logging
+
+# CRITICAL: Log immediately to confirm this script is running
+print("=" * 70, file=sys.stderr, flush=True)
+print("STARTING: Python RQ Worker Launcher (run_worker.py)", file=sys.stderr, flush=True)
+print("=" * 70, file=sys.stderr, flush=True)
+
 from redis import Redis
 from rq import Worker, Queue
 
