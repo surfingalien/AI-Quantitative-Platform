@@ -46,12 +46,17 @@ const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: any) 
 );
 
 const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: any }) => {
-  const colors: Record<'BUY' | 'SELL' | 'HOLD', { bg: string; text: string }> = {
-    'BUY': { bg: 'emerald', text: 'emerald' },
-    'SELL': { bg: 'red', text: 'red' },
-    'HOLD': { bg: 'amber', text: 'amber' },
+  const getColor = (action: 'BUY' | 'SELL' | 'HOLD') => {
+    switch (action) {
+      case 'BUY':
+        return { bg: 'emerald', text: 'emerald' };
+      case 'SELL':
+        return { bg: 'red', text: 'red' };
+      case 'HOLD':
+        return { bg: 'amber', text: 'amber' };
+    }
   };
-  const color = colors[type as 'BUY' | 'SELL' | 'HOLD'];
+  const color = getColor(type);
 
   return (
     <span className={`px-3 py-1 rounded-full text-xs font-bold bg-${color.bg}-500/20 text-${color.text}-400 border border-${color.bg}-500/30 whitespace-nowrap`}>
