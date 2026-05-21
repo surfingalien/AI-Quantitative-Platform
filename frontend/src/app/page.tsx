@@ -103,14 +103,32 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const backendHost = process.env.NEXT_PUBLIC_BACKEND_URL || "localhost:8000";
-    const protocol = process.env.NEXT_PUBLIC_BACKEND_URL ? "wss" : "ws";
-    const httpProtocol = process.env.NEXT_PUBLIC_BACKEND_URL ? "https" : "http";
+    const getBackendUrl = () => {
+      // Use environment variable if available, otherwise construct from current window
+      if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+        return process.env.NEXT_PUBLIC_BACKEND_URL;
+      }
+      // Fallback to current origin (works in both dev and production)
+      if (typeof window !== 'undefined') {
+        return window.location.origin;
+      }
+      return 'http://localhost:8000';
+    };
 
-    const ws = new WebSocket(`${protocol}://${backendHost}/ws`);
+    const backendUrl = getBackendUrl();
+    const protocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
+    const httpProtocol = backendUrl.startsWith('https') ? 'https' : 'http';
 
-    ws.onopen = () => setIsConnected(true);
+    // Connect to WebSocket for live signals
+    const wsUrl = `${protocol}://${backendUrl.replace(/^https?:\/\//, '')}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      setIsConnected(true);
+      console.log("Connected to backend");
+    };
     ws.onclose = () => setIsConnected(false);
+    ws.onerror = (e) => console.error("WebSocket error:", e);
 
     ws.onmessage = (event) => {
       try {
@@ -121,12 +139,13 @@ export default function Home() {
       }
     };
 
-    fetch(`${httpProtocol}://${backendHost}/api/signals`)
+    // Fetch initial signals
+    fetch(`${httpProtocol}://${backendUrl.replace(/^https?:\/\//, '')}/api/signals`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setSignals(data);
       })
-      .catch(console.error);
+      .catch(err => console.error("Failed to fetch signals:", err));
 
     return () => ws.close();
   }, []);
