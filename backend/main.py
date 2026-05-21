@@ -83,6 +83,10 @@ async def startup_event():
 def read_root():
     return {"status": "AI Trading API is running"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
