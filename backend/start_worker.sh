@@ -15,10 +15,27 @@ echo "ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-(not set)}"
 echo "GEMINI_API_KEY: ${GEMINI_API_KEY:-(not set)}"
 echo ""
 
+# If REDIS_URL is not set, try to get it from Railway's auto-generated variable
+if [ -z "$REDIS_URL" ]; then
+    echo "⚠ REDIS_URL not set, looking for Railway Redis connection..."
+    # Railway auto-generates variables like REDIS_*
+    if [ -n "$REDIS_HOST" ] && [ -n "$REDIS_PORT" ]; then
+        REDIS_URL="redis://${REDIS_HOST}:${REDIS_PORT}"
+        echo "✓ Constructed REDIS_URL from REDIS_HOST and REDIS_PORT"
+    else
+        # Fall back to localhost for development
+        REDIS_URL="redis://trading-redis:6379"
+        echo "⚠ Using fallback Redis URL: $REDIS_URL"
+    fi
+fi
+
+echo "Final REDIS_URL: $REDIS_URL"
+echo ""
+
 # Test Redis connection
 echo "=== Testing Redis Connection ==="
 if command -v redis-cli &> /dev/null; then
-    redis-cli -u "${REDIS_URL:-redis://localhost:6379}" ping
+    redis-cli -u "${REDIS_URL}" ping 2>&1 || echo "⚠ Could not connect to Redis yet (may start after retry)"
 else
     echo "redis-cli not available, will test via Python"
 fi
@@ -53,7 +70,7 @@ echo ""
 
 # Start the worker
 echo "=== Starting RQ Worker ==="
-echo "Command: rq worker default --url ${REDIS_URL:-redis://localhost:6379}"
+echo "Using REDIS_URL: $REDIS_URL"
 echo ""
 
-exec rq worker default --url "${REDIS_URL:-redis://localhost:6379}" --with-scheduler
+exec rq worker default --url "$REDIS_URL" --with-scheduler

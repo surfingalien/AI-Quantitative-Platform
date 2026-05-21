@@ -62,15 +62,9 @@
       "buildCommand": "pip install -r requirements.txt && chmod +x start_worker.sh",
       "startCommand": "bash start_worker.sh",
       "variables": {
-        "REDIS_URL": {
-          "reference": "${{ services.trading-redis.connectionString }}"
-        },
-        "ANTHROPIC_API_KEY": {
-          "reference": "${{ services.trading-backend.ANTHROPIC_API_KEY }}"
-        },
-        "GEMINI_API_KEY": {
-          "reference": "${{ services.trading-backend.GEMINI_API_KEY }}"
-        }
+        "REDIS_URL": "",
+        "ANTHROPIC_API_KEY": "",
+        "GEMINI_API_KEY": ""
       }
     },
     {
