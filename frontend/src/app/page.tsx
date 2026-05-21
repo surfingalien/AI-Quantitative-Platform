@@ -23,7 +23,26 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
-const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: any) => (
+interface StatCardProps {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  value: string | number;
+  change?: number;
+  color?: string;
+}
+
+interface Signal {
+  id?: string;
+  symbol: string;
+  timeframe?: string;
+  ai_assessment?: 'BUY' | 'SELL' | 'HOLD';
+  confidence?: number;
+  hybrid_score?: number;
+  action_taken?: string;
+  timestamp?: string;
+}
+
+const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: StatCardProps) => (
   <motion.div
     variants={itemVariants}
     className="glass-panel p-6 rounded-2xl card-hover"
@@ -45,7 +64,7 @@ const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: any) 
   </motion.div>
 );
 
-const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: number }) => {
+const SignalBadge = ({ type }: { type: 'BUY' | 'SELL' | 'HOLD' }) => {
   const getColor = (action: 'BUY' | 'SELL' | 'HOLD') => {
     switch (action) {
       case 'BUY':
@@ -66,13 +85,13 @@ const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: n
 };
 
 export default function Home() {
-  const [signals, setSignals] = useState<Array<{ symbol: string; confidence: number; action: string }>>([]);
+  const [signals, setSignals] = useState<Signal[]>([]);
   const [trackedStocks, setTrackedStocks] = useState<string[]>(INITIAL_STOCKS);
   const [newStock, setNewStock] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [activeTab, setActiveTab] = useState('signals');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalTrades: 247,
     winRate: 62.5,
     totalReturn: 32100,
@@ -326,7 +345,7 @@ export default function Home() {
                               </td>
                             </tr>
                           ) : (
-                            signals.map((signal: any, idx) => (
+                            signals.map((signal: Signal, idx) => (
                               <motion.tr
                                 key={signal.id || idx}
                                 initial={{ opacity: 0, x: -20 }}
