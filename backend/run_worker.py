@@ -7,11 +7,23 @@ import os
 import sys
 import time
 import logging
+import signal
 
 # CRITICAL: Log immediately to confirm this script is running
+# Use both stdout and stderr for maximum visibility
+print("=" * 70, flush=True)
+print("STARTUP: Python RQ Worker Launcher (run_worker.py) - PID {}".format(os.getpid()), flush=True)
+print("=" * 70, flush=True)
+print("", flush=True)
+
+# Write to stderr also
 print("=" * 70, file=sys.stderr, flush=True)
-print("STARTING: Python RQ Worker Launcher (run_worker.py)", file=sys.stderr, flush=True)
+print("STARTUP: Python RQ Worker Launcher (run_worker.py) - PID {}".format(os.getpid()), file=sys.stderr, flush=True)
 print("=" * 70, file=sys.stderr, flush=True)
+
+# Set up a signal handler to catch any attempts to hijack the process
+original_sigterm = signal.signal(signal.SIGTERM, signal.SIG_DFL)
+original_sigint = signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from redis import Redis
 from rq import Worker, Queue
@@ -31,17 +43,32 @@ def get_redis_url() -> str:
     # Try to get from environment
     redis_url = os.getenv('REDIS_URL')
 
+    # Print diagnostics (not just logger) for visibility in Railway logs
+    print(f"[DIAGNOSTIC] Raw REDIS_URL: {repr(redis_url)}", flush=True)
+    print(f"[DIAGNOSTIC] REDIS_URL type: {type(redis_url)}", flush=True)
+    print(f"[DIAGNOSTIC] REDIS_URL length: {len(redis_url) if redis_url else 'N/A (None)'}", flush=True)
+
     # Debug: log the raw value
     logger.info(f"DEBUG: Raw REDIS_URL from environment: {repr(redis_url)}")
+    logger.info(f"DEBUG: REDIS_URL type: {type(redis_url)}")
     logger.info(f"DEBUG: REDIS_URL length: {len(redis_url) if redis_url else 0}")
 
-    # If empty, None, or whitespace, use default
-    if not redis_url or not redis_url.strip():
+    # Check for invalid values that RQ CLI might reject
+    if redis_url is None:
+        print(f"[DIAGNOSTIC] REDIS_URL is None", flush=True)
+        logger.warning("REDIS_URL is None, using fallback")
+        redis_url = 'redis://trading-redis:6379'
+    elif isinstance(redis_url, str) and not redis_url.strip():
+        print(f"[DIAGNOSTIC] REDIS_URL is empty string or whitespace only", flush=True)
         logger.warning("REDIS_URL is empty or whitespace, using fallback")
         redis_url = 'redis://trading-redis:6379'
-        logger.info(f"Using fallback REDIS_URL: {redis_url}")
+    elif not isinstance(redis_url, str):
+        print(f"[DIAGNOSTIC] REDIS_URL is not a string: {type(redis_url)}", flush=True)
+        logger.warning(f"REDIS_URL is not a string: {type(redis_url)}, using fallback")
+        redis_url = 'redis://trading-redis:6379'
     else:
         redis_url = redis_url.strip()
+        print(f"[DIAGNOSTIC] REDIS_URL from environment (stripped): {redis_url}", flush=True)
         logger.info(f"Using REDIS_URL from environment: {redis_url}")
 
     # Validate format
