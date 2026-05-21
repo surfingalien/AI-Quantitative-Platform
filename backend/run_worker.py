@@ -54,21 +54,29 @@ def get_redis_url() -> str:
 def test_redis_connection(redis_url: str, max_retries: int = 15) -> Redis:
     """Test Redis connection, retrying up to max_retries times."""
     redis_conn = None
+    last_error = None
 
     for attempt in range(1, max_retries + 1):
         try:
             logger.info(f"Attempting Redis connection (attempt {attempt}/{max_retries})...")
+            logger.info(f"  Redis URL: {redis_url}")
             redis_conn = Redis.from_url(redis_url)
             redis_conn.ping()
             logger.info("✓ Redis connection verified")
             return redis_conn
         except Exception as e:
-            logger.warning(f"⚠ Redis not ready: {e}")
+            last_error = e
+            logger.warning(f"⚠ Redis not ready: {type(e).__name__}: {e}")
             if attempt < max_retries:
-                logger.info(f"  Waiting 2 seconds before retry...")
+                logger.info(f"  Waiting 2 seconds before retry ({attempt}/{max_retries})...")
                 time.sleep(2)
             else:
                 logger.error(f"❌ Failed to connect to Redis after {max_retries} attempts")
+                logger.error(f"   Last error: {type(last_error).__name__}: {last_error}")
+                logger.error(f"   Verify that:")
+                logger.error(f"     1. Redis service 'trading-redis' is running")
+                logger.error(f"     2. Port 6379 is accessible")
+                logger.error(f"     3. Services are on the same network (Railway internal)")
                 raise
 
 

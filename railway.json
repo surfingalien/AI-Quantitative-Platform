@@ -28,9 +28,7 @@
       "buildCommand": "pip install -r requirements.txt",
       "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
       "variables": {
-        "REDIS_URL": {
-          "reference": "${{ services.trading-redis.connectionString }}"
-        },
+        "REDIS_URL": "redis://trading-redis:6379",
         "ANTHROPIC_API_KEY": {
           "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
           "value": ""
@@ -59,12 +57,10 @@
         "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
         "rootDirectory": "backend"
       },
-      "buildCommand": "pip install -r requirements.txt && chmod +x start_worker.sh run_worker.py",
-      "startCommand": "bash start_worker.sh",
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "python run_worker.py",
       "variables": {
-        "REDIS_URL": {
-          "reference": "${{ services.trading-redis.connectionString }}"
-        },
+        "REDIS_URL": "redis://trading-redis:6379",
         "ANTHROPIC_API_KEY": {
           "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
           "value": ""
