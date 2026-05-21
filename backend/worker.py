@@ -3,7 +3,7 @@ import json
 import time
 import sys
 from redis import Redis
-from rq import Worker, Queue, Connection
+from rq import Worker, Queue
 
 # Handle imports gracefully to catch initialization errors
 try:
@@ -134,10 +134,9 @@ def process_webhook_job(payload: dict):
 if __name__ == '__main__':
     try:
         print("Starting RQ worker...")
-        with Connection(redis_conn):
-            worker = Worker(['default'])
-            print(f"✓ Worker started, listening on queue 'default'")
-            worker.work()
+        worker = Worker(['default'], connection=redis_conn)
+        print(f"✓ Worker started, listening on queue 'default'")
+        worker.work()
     except KeyboardInterrupt:
         print("Worker interrupted by user")
     except Exception as e:
