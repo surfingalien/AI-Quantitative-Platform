@@ -62,6 +62,9 @@
       "buildCommand": "pip install -r requirements.txt && chmod +x start_worker.sh",
       "startCommand": "bash start_worker.sh",
       "variables": {
+        "REDIS_URL": {
+          "reference": "${{ services.trading-redis.connectionString }}"
+        },
         "ANTHROPIC_API_KEY": {
           "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
           "value": ""
