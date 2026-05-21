@@ -45,7 +45,7 @@ const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: any) 
   </motion.div>
 );
 
-const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: any }) => {
+const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: number }) => {
   const getColor = (action: 'BUY' | 'SELL' | 'HOLD') => {
     switch (action) {
       case 'BUY':
@@ -66,7 +66,7 @@ const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: a
 };
 
 export default function Home() {
-  const [signals, setSignals] = useState<any[]>([]);
+  const [signals, setSignals] = useState<Array<{ symbol: string; confidence: number; action: string }>>([]);
   const [trackedStocks, setTrackedStocks] = useState<string[]>(INITIAL_STOCKS);
   const [newStock, setNewStock] = useState("");
   const [isConnected, setIsConnected] = useState(false);
