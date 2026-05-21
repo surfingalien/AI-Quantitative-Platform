@@ -45,12 +45,12 @@ const StatCard = ({ icon: Icon, label, value, change, color = 'emerald' }: any) 
   </motion.div>
 );
 
-const SignalBadge = ({ type, score }: any) => {
+const SignalBadge = ({ type, score }: { type: 'BUY' | 'SELL' | 'HOLD'; score?: any }) => {
   const colors = {
     'BUY': { bg: 'emerald', text: 'emerald' },
     'SELL': { bg: 'red', text: 'red' },
     'HOLD': { bg: 'amber', text: 'amber' },
-  };
+  } as const;
   const color = colors[type] || colors['HOLD'];
 
   return (
