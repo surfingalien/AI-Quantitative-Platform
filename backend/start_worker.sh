@@ -20,13 +20,15 @@ if [ -z "$REDIS_URL" ]; then
     echo "⚠ REDIS_URL not set, looking for Railway Redis connection..."
     # Railway auto-generates variables like REDIS_*
     if [ -n "$REDIS_HOST" ] && [ -n "$REDIS_PORT" ]; then
-        REDIS_URL="redis://${REDIS_HOST}:${REDIS_PORT}"
+        export REDIS_URL="redis://${REDIS_HOST}:${REDIS_PORT}"
         echo "✓ Constructed REDIS_URL from REDIS_HOST and REDIS_PORT"
     else
         # Fall back to localhost for development
-        REDIS_URL="redis://trading-redis:6379"
+        export REDIS_URL="redis://trading-redis:6379"
         echo "⚠ Using fallback Redis URL: $REDIS_URL"
     fi
+else
+    echo "✓ REDIS_URL provided by environment"
 fi
 
 echo "Final REDIS_URL: $REDIS_URL"
