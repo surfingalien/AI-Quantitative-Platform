@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "quantitative-platform": {
+      "command": "node",
+      "args": ["src/mcp_server.js"],
+      "description": "AI-Quantitative Trading Platform - Skills, agents, and trading tools",
+      "tools": [
+        "validate_signal",
+        "calculate_position_size",
+        "get_portfolio_exposure",
+        "backtest_strategy",
+        "analyze_market",
+        "execute_trade",
+        "generate_performance_report",
+        "check_risk_limits",
+        "get_signal_history",
+        "monitor_portfolio"
+      ]
+    },
+    "trading-data": {
+      "command": "python",
+      "args": ["backend/data_server.py"],
+      "description": "Real-time market data provider - OHLCV, indicators, fundamentals",
+      "tools": [
+        "get_ohlcv",
+        "get_indicators",
+        "get_symbol_info",
+        "scan_symbols",
+        "get_equity_curve",
+        "get_trade_history"
+      ]
+    },
+    "portfolio-manager": {
+      "command": "python",
+      "args": ["backend/portfolio_server.py"],
+      "description": "Portfolio optimization and management - position sizing, rebalancing, limits",
+      "tools": [
+        "calculate_position_size",
+        "check_exposure_limits",
+        "rebalance_portfolio",
+        "get_portfolio_metrics",
+        "apply_volatility_scaling",
+        "check_sector_limits"
+      ]
+    }
+  },
+  "settings": {
+    "environment": "production",
+    "debug": false,
+    "timeout": 30000,
+    "maxRetries": 3,
+    "logLevel": "info"
+  },
+  "profile": {
+    "user": "suhasgm@gmail.com",
+    "tradingStyle": "algorithmic_systematic",
+    "markets": ["crypto", "us_equities"],
+    "timeframes": ["15m", "1h", "4h", "1d"],
+    "riskProfile": "moderate_aggressive",
+    "accountSize": 100000
+  }
+}
