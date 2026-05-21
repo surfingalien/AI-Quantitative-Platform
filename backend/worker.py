@@ -1,5 +1,7 @@
 import os
 import json
+import time
+import sys
 from redis import Redis
 from rq import Worker, Queue, Connection
 from database import SessionLocal
@@ -8,7 +10,26 @@ from ai_engine import analyze_with_claude, calculate_hybrid_score
 from indicators import fetch_and_calculate_technicals
 
 redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
-redis_conn = Redis.from_url(redis_url)
+
+# Wait for Redis to be available
+redis_conn = None
+max_retries = 30
+retry_count = 0
+
+while retry_count < max_retries:
+    try:
+        redis_conn = Redis.from_url(redis_url)
+        redis_conn.ping()
+        print(f"✓ Connected to Redis at {redis_url}")
+        break
+    except Exception as e:
+        retry_count += 1
+        print(f"Waiting for Redis... (attempt {retry_count}/{max_retries}): {e}")
+        time.sleep(2)
+
+if redis_conn is None:
+    print("Failed to connect to Redis after 30 attempts. Exiting.")
+    sys.exit(1)
 
 def process_webhook_job(payload: dict):
     '''
@@ -84,6 +105,16 @@ def process_webhook_job(payload: dict):
         db.close()
 
 if __name__ == '__main__':
-    with Connection(redis_conn):
-        worker = Worker(['default'])
-        worker.work()
+    try:
+        print("Starting RQ worker...")
+        with Connection(redis_conn):
+            worker = Worker(['default'])
+            print(f"✓ Worker started, listening on queue 'default'")
+            worker.work()
+    except KeyboardInterrupt:
+        print("Worker interrupted by user")
+    except Exception as e:
+        print(f"Worker error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
