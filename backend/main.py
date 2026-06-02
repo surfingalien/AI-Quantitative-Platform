@@ -124,3 +124,25 @@ def get_signals(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
 def get_portfolio(db: Session = Depends(get_db)):
     portfolio = db.query(models.Portfolio).all()
     return portfolio
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AI Finance Brain — RAG Research + Quant Brain endpoints
+# ═══════════════════════════════════════════════════════════════════════════════
+from rag_brain import quant_predict, stream_research, QuantPrediction
+
+@app.get("/api/v1/quant/predict/{ticker}", response_model=QuantPrediction,
+         summary="Quant Brain — trend & volatility prediction")
+async def get_quant_prediction(ticker: str):
+    """
+    Runs the PyTorch Transformer on recent OHLCV data.
+    Returns: trend (BULLISH|BEARISH), volatility (LOW|MEDIUM|HIGH), confidence %.
+    """
+    return await quant_predict(ticker)
+
+@app.websocket("/ws/research/{ticker}")
+async def websocket_research(websocket: WebSocket, ticker: str):
+    """
+    Streams a Claude-generated research report for the given ticker.
+    Pulls fundamentals from yfinance; upgrades to Qdrant when available.
+    """
+    await stream_research(websocket, ticker)

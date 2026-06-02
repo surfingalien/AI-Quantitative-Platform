@@ -1,40 +1,24 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
-
 export const metadata: Metadata = {
-  title: "AI Quantitative Trading Platform",
-  description: "Advanced AI-powered institutional-grade trading assistant with real-time signals, portfolio optimization, and automated execution",
-  viewport: "width=device-width, initial-scale=1",
-  keywords: "trading, AI, quantitative, algorithmic, signals, portfolio, optimization",
-  authors: [{ name: "Suhas GM" }],
+  title: "AI Finance Brain",
+  description: "Multi-modal AI for financial research and portfolio intelligence",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en">
       <head>
-        <meta name="theme-color" content="#0f172a" />
-        <meta name="format-detection" content="telephone=no" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700&family=JetBrains+Mono:wght@300..500&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white overflow-x-hidden`}
-      >
+      <body className="bg-[#0a0c10] text-[#e2e8f0] antialiased min-h-screen"
+            style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         {children}
       </body>
     </html>

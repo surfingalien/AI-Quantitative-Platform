@@ -8,7 +8,11 @@
         "image": "redis:7-alpine"
       },
       "healthcheck": {
-        "test": ["CMD", "redis-cli", "ping"],
+        "test": [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ],
         "interval": 10,
         "timeout": 5,
         "retries": 5,
@@ -25,29 +29,37 @@
         "repo": "https://github.com/surfingalien/AI-Quantitative-Platform",
         "rootDirectory": "backend"
       },
-      "buildCommand": "pip install -r requirements.txt",
       "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
       "variables": {
         "REDIS_URL": "redis://trading-redis:6379",
         "ANTHROPIC_API_KEY": {
-          "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
+          "description": "Anthropic Claude API key (sk-ant-v0-...)",
           "value": ""
         },
         "GEMINI_API_KEY": {
-          "description": "Your Google Gemini API key",
+          "description": "Google Gemini API key (optional)",
           "value": ""
         },
         "WEBHOOK_SECRET": {
-          "description": "Webhook secret for TradingView (auto-generated, you can keep empty and Railway will generate)",
+          "description": "TradingView webhook secret",
+          "value": ""
+        },
+        "FINNHUB_API_KEY": {
+          "description": "Finnhub API key for news ingestion (optional)",
           "value": ""
         }
       },
       "healthcheck": {
-        "test": ["CMD", "curl", "-f", "http://localhost:$PORT/health"],
+        "test": [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:$PORT/health"
+        ],
         "interval": 10,
         "timeout": 5,
         "retries": 3,
-        "startPeriod": 30
+        "startPeriod": 60
       }
     },
     {
@@ -62,11 +74,11 @@
       "variables": {
         "REDIS_URL": "redis://trading-redis:6379",
         "ANTHROPIC_API_KEY": {
-          "description": "Your Anthropic Claude API key (starts with sk-ant-v0-)",
+          "description": "Anthropic Claude API key",
           "value": ""
         },
         "GEMINI_API_KEY": {
-          "description": "Your Google Gemini API key",
+          "description": "Google Gemini API key (optional)",
           "value": ""
         }
       }
@@ -81,16 +93,19 @@
       "buildCommand": "npm install && npm run build",
       "startCommand": "npm start",
       "variables": {
-        "NEXT_PUBLIC_BACKEND_URL": {
-          "reference": "${{ services.trading-backend.url }}"
-        }
+        "NEXT_PUBLIC_BACKEND_URL": ""
       },
       "healthcheck": {
-        "test": ["CMD", "curl", "-f", "http://localhost:3000"],
+        "test": [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:3000"
+        ],
         "interval": 10,
         "timeout": 5,
         "retries": 3,
-        "startPeriod": 30
+        "startPeriod": 60
       }
     }
   ]
