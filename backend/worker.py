@@ -38,25 +38,26 @@ except Exception as e:
 
 redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
 
-# Wait for Redis to be available
-redis_conn = None
-max_retries = 30
-retry_count = 0
+# Lazy Redis connection — established on first use, not at import time.
+# This allows main.py to import process_webhook_job without blocking on Redis.
+_redis_conn = None
 
-while retry_count < max_retries:
-    try:
-        redis_conn = Redis.from_url(redis_url)
-        redis_conn.ping()
-        print(f"✓ Connected to Redis at {redis_url}")
-        break
-    except Exception as e:
-        retry_count += 1
-        print(f"Waiting for Redis... (attempt {retry_count}/{max_retries}): {e}")
-        time.sleep(2)
-
-if redis_conn is None:
-    print("Failed to connect to Redis after 30 attempts. Exiting.")
-    sys.exit(1)
+def _get_redis() -> Redis:
+    global _redis_conn
+    if _redis_conn is not None:
+        return _redis_conn
+    max_retries = 30
+    for attempt in range(1, max_retries + 1):
+        try:
+            conn = Redis.from_url(redis_url)
+            conn.ping()
+            print(f"✓ Connected to Redis at {redis_url}")
+            _redis_conn = conn
+            return conn
+        except Exception as e:
+            print(f"Waiting for Redis... (attempt {attempt}/{max_retries}): {e}")
+            time.sleep(2)
+    raise RuntimeError("Failed to connect to Redis after 30 attempts.")
 
 def process_webhook_job(payload: dict):
     '''
@@ -124,7 +125,7 @@ def process_webhook_job(payload: dict):
             "ai_assessment": new_signal.ai_assessment,
             "timestamp": new_signal.timestamp.isoformat()
         }
-        redis_conn.publish("signal_updates", json.dumps(signal_dict))
+        _get_redis().publish("signal_updates", json.dumps(signal_dict))
         
     except Exception as e:
         print(f"Failed to process job: {e}")
@@ -134,7 +135,7 @@ def process_webhook_job(payload: dict):
 if __name__ == '__main__':
     try:
         print("Starting RQ worker...")
-        worker = Worker(['default'], connection=redis_conn)
+        worker = Worker(['default'], connection=_get_redis())
         print(f"✓ Worker started, listening on queue 'default'")
         worker.work()
     except KeyboardInterrupt:
