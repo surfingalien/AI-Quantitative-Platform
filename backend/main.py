@@ -146,3 +146,41 @@ async def websocket_research(websocket: WebSocket, ticker: str):
     Pulls fundamentals from yfinance; upgrades to Qdrant when available.
     """
     await stream_research(websocket, ticker)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TV Brain — Real OHLCV + multi-phase streaming AI analysis
+# ═══════════════════════════════════════════════════════════════════════════════
+from tv_brain import get_chart_data, stream_tv_brain
+
+@app.get("/api/v1/chart/{ticker}", summary="Real OHLCV from yfinance")
+async def get_chart(ticker: str, period: str = "3mo", interval: str = "1d"):
+    """Returns real OHLCV bars for lightweight-charts."""
+    bars = await get_chart_data(ticker, period, interval)
+    return bars
+
+@app.websocket("/ws/tv-brain/{ticker}")
+async def websocket_tv_brain(websocket: WebSocket, ticker: str):
+    """
+    Streams multi-phase AI brain analysis: technical → fundamentals →
+    quant → Claude verdict → trade setup with entry/stop/target.
+    """
+    await stream_tv_brain(websocket, ticker)
+
+@app.get("/api/v1/tv/status", summary="TradingView MCP connection status")
+async def tv_mcp_status():
+    """Reports whether the TradingView Desktop CDP bridge is connected."""
+    import httpx
+    connected = False
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            r = await client.get("http://localhost:9222/json")
+            connected = r.status_code == 200
+    except Exception:
+        pass
+    return {
+        "connected": connected,
+        "mode": "cdp_bridge" if connected else "standalone",
+        "port": 9222,
+        "mcp_server": "/root/tradingview-mcp/src/server.js",
+    }

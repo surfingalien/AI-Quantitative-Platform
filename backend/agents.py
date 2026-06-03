@@ -2,7 +2,15 @@ import os
 import json
 from anthropic import Anthropic
 import yfinance as yf
-import google.generativeai as genai
+
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+    print("✓ google.generativeai imported")
+except BaseException as e:
+    genai = None
+    GENAI_AVAILABLE = False
+    print(f"⚠ google.generativeai unavailable: {e}")
 
 try:
     anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
@@ -13,11 +21,11 @@ except Exception as e:
 
 try:
     gemini_api_key = os.getenv("GEMINI_API_KEY", "")
-    if gemini_api_key:
+    if GENAI_AVAILABLE and gemini_api_key:
         genai.configure(api_key=gemini_api_key)
         print("✓ Gemini API configured")
     else:
-        print("⚠ GEMINI_API_KEY not set, Gemini features will be disabled")
+        print("⚠ GEMINI_API_KEY not set or genai unavailable, Gemini features will be disabled")
 except Exception as e:
     print(f"⚠ Gemini API configuration warning: {e}")
 
@@ -86,7 +94,7 @@ class GeminiQualitativeAgent:
     def __init__(self):
         self.model = None
         try:
-            if os.getenv("GEMINI_API_KEY"):
+            if GENAI_AVAILABLE and os.getenv("GEMINI_API_KEY"):
                 self.model = genai.GenerativeModel('gemini-1.5-flash')
                 print("✓ Gemini model initialized")
         except Exception as e:
